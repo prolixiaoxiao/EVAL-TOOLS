@@ -1,9 +1,10 @@
+from collections import defaultdict
 import numpy as np
 import json
 
-
 MIN_SCORE = -9999
 MAX_TRACK_ID = 10000
+
 
 class Joint:
     def __init__(self):
@@ -25,15 +26,15 @@ class Joint:
         self.head_top = 14
 
 
-def getHeadSize(x1,y1,x2,y2):
-    headSize = 0.8 * np.linalg.norm(np.subtract([x2,y2],[x1,y1]));
+def getHeadSize(x1, y1, x2, y2):
+    headSize = 0.8 * np.linalg.norm(np.subtract([x2, y2], [x1, y1]));
     return headSize
 
-# compute recall/precision curve (RPC) values
-def computeRPC(scores,labels,totalPos):
 
+# compute recall/precision curve (RPC) values
+def computeRPC(scores, labels, totalPos):
     precision = np.zeros(len(scores))
-    recall    = np.zeros(len(scores))
+    recall = np.zeros(len(scores))
     npos = 0;
 
     idxsSort = np.array(scores).argsort()[::-1]
@@ -43,26 +44,42 @@ def computeRPC(scores,labels,totalPos):
         if (labelsSort[sidx] == 1):
             npos += 1
         # recall: how many true positives were found out of the total number of positives?
-        recall[sidx]    = 1.0*npos / totalPos
+        recall[sidx] = 1.0 * npos / totalPos
         # precision: how many true positives were found out of the total number of samples?
-        precision[sidx] = 1.0*npos / (sidx + 1)
+        precision[sidx] = 1.0 * npos / (sidx + 1)
 
     return precision, recall, idxsSort
+transform = list(zip(
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    ))
+def eval1(json_file):
+    anno = json.load(open(json_file))
+    keypoint = {}
+    label = []
+    for img_info in anno['images']:
+        # images.append(img_info['image_name'])
+        label = img_info['label']
+        xs = img_info['keypoints'][0::2]
+        ys = img_info['keypoints'][1::2]
+        new_kp = []
+        for idx, idy in transform:
+            new_kp.append(
+                (xs[idx], ys[idy])
+            )
+        keypoint[img_info['image_name']] = new_kp
+        # keypoint[img_info['image_name']] = img_info['keypoints']
+
+    return keypoint,label
 
 def eval(json_file):
     anno = json.load(open(json_file))
     images = []
     keypoint = {}
-    transform = list(zip(
-        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-    ))
-    for img_info in anno['images']:
+    for img_info in anno['annotations']:
         images.append(img_info['image_name'])
-
-        xs = img_info['keypoints'][0::2]
-        ys = img_info['keypoints'][1::2]
-
+        xs = img_info['keypoints'][0::3]
+        ys = img_info['keypoints'][1::3]
         new_kp = []
         for idx, idy in transform:
             new_kp.append(
