@@ -37,13 +37,16 @@ def computePCK(distAll, distThresh):
     pckAll = np.zeros([len(distAll) + 1, 1])
     nCorrect = 0
     nTotal = 13
+    result = open("test_result.csv", "a")
+    result.write(
+        "folder_name,image_name,model,pckh_head,pckh_lShoulder,pckh_rShoulder,pckh_lElbow, pckh_rElbow,pckh_rWrist,pckh_rWrist,pckh_lHip, pckh_rHip,pckh_lKnee,pckh_rKnee,pckh_lAnkle,pckh_rAnkle,PCKH\n")
+    result.close()
     for pidx in range(len(distAll)):
         idxs = np.argwhere(distAll[pidx] <= distThresh)
         pck = 100.0 * (1-distAll[pidx])
         pckAll[pidx, 0] = pck
         nCorrect += len(idxs)
     pckAll[-1, 0] = 100.0 * nCorrect / nTotal
-
     name_value = [('Shoulder', 0.5 * (pckAll[1] + pckAll[2])),
                   ('Elbow', 0.5 * (pckAll[3] + pckAll[4])),
                   ('Wrist', 0.5 * (pckAll[5] + pckAll[6])),
@@ -52,6 +55,12 @@ def computePCK(distAll, distThresh):
                   ('Ankle', 0.5 * (pckAll[11] + pckAll[12])),
                   ('PCKh', pckAll[-1])]
     name_value = OrderedDict(name_value)
+    result = open("test_result.csv", "a+")
+    result.write("{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".
+                 format(preFramesAll, id, preFramesAll, pckAll[0], pckAll[1], pckAll[2], pckAll[3],
+                        pckAll[4], pckAll[5], pckAll[6], pckAll[7], pckAll[8], pckAll[9], pckAll[10], pckAll[11],
+                        pckAll[12], pckAll[13]))
+    result.close()
 
     return name_value
 
